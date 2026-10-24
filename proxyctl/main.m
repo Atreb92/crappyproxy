@@ -1,5 +1,7 @@
-// usage: proxyctl on [host port] | off | set host port | status | get | dump   (setuid root; Wi-Fi = en0)
+// usage: proxyctl on [host port] | off | set host port | status | get   (setuid root; Wi-Fi = en0)
+// debug builds (no FINALPACKAGE) also have: dump | services
 #import <Foundation/Foundation.h>
+#import <pwd.h>
 
 // the iOS SDK marks SCPreferences unavailable, but the symbols exist at runtime
 typedef const struct __SCPreferences *SCPreferencesRef;
@@ -12,18 +14,37 @@ SC(Boolean, SCPreferencesUnlock, (SCPreferencesRef));
 SC(Boolean, SCPreferencesCommitChanges, (SCPreferencesRef));
 SC(Boolean, SCPreferencesApplyChanges, (SCPreferencesRef));
 
+// hostname / IPv4 / IPv6 characters only, so nothing odd lands in the system configuration
+static BOOL validHost(NSString *h) {
+	static NSCharacterSet *bad;
+	if (!bad) bad = [[NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_:"] invertedSet];
+	return [h isKindOfClass:NSString.class] && h.length && h.length <= 253 && ![h rangeOfCharacterFromSet:bad].length;
+}
+
+static int parsePort(const char *s) { // 1-65535, else 0
+	char *end; long v = strtol(s, &end, 10);
+	return (*s && !*end && v >= 1 && v <= 65535) ? (int)v : 0;
+}
+
 int main(int argc, char **argv) {
 	@autoreleasepool {
+		// only root and the device's mobile user may use this setuid helper; the uid is looked up, not assumed
+		struct passwd *mobile = getpwnam("mobile");
+		uid_t caller = getuid();
+		if (caller != 0 && (!mobile || caller != mobile->pw_uid)) { fprintf(stderr, "not permitted\n"); return 77; }
 		setuid(0); setgid(0);
 		if (argc < 2) return 2;
 		NSString *cmd = @(argv[1]);
+		if (!cmd) return 2; // argument was not valid UTF-8
 		SCPreferencesRef p = SCPreferencesCreate(NULL, CFSTR("proxyctl"), NULL);
 		NSDictionary *svcs = (__bridge NSDictionary *)SCPreferencesPathGetValue(p, CFSTR("/NetworkServices"));
 		// iOS has several en0 services (the count varies per device) and only one is live, so write all of them
+#ifdef PROXYCTL_DEBUG
 		if ([cmd isEqual:@"services"]) { // debug: every service with its device, name and proxy dict
 			for (NSString *k in svcs) printf("%s dev=%s name=%s proxies=%s\n", k.UTF8String, [svcs[k][@"Interface"][@"DeviceName"] description].UTF8String, [svcs[k][@"UserDefinedName"] description].UTF8String, [[svcs[k][@"Proxies"] description] stringByReplacingOccurrencesOfString:@"\n" withString:@" "].UTF8String);
 			return 0;
 		}
+#endif
 		NSMutableArray<NSString *> *paths = [NSMutableArray array];
 		for (NSString *k in svcs)
 			if ([svcs[k][@"Interface"][@"DeviceName"] isEqual:@"en0"])
@@ -36,22 +57,29 @@ int main(int argc, char **argv) {
 		// Settings treats the proxy as Manual while HTTPProxy exists, so Off must delete the keys.
 		// The last host/port live here so a bare `on` (and the app's fields) can restore them.
 		NSString *saved = @"/var/jb/var/mobile/Library/Preferences/com.atreb92.crappyproxy.plist";
-		NSDictionary *last = [NSDictionary dictionaryWithContentsOfFile:saved];
-		NSString *host = d[@"HTTPProxy"] ?: last[@"host"] ?: @"";
-		int port = d[@"HTTPPort"] ? [d[@"HTTPPort"] intValue] : [last[@"port"] intValue];
+		NSDictionary *last = [NSDictionary dictionaryWithContentsOfFile:saved]; // writable by mobile: check types and ranges
+		NSString *lastHost = validHost(last[@"host"]) ? last[@"host"] : nil;
+		int lastPort = [last[@"port"] isKindOfClass:NSNumber.class] && [last[@"port"] intValue] >= 1 && [last[@"port"] intValue] <= 65535 ? [last[@"port"] intValue] : 0;
+		NSString *host = d[@"HTTPProxy"] ?: lastHost ?: @"";
+		int port = d[@"HTTPPort"] ? [d[@"HTTPPort"] intValue] : lastPort;
 
 		if ([cmd isEqual:@"status"]) { puts([d[@"HTTPEnable"] intValue] ? "1" : "0"); return 0; }
+#ifdef PROXYCTL_DEBUG
 		if ([cmd isEqual:@"dump"]) { puts(d.description.UTF8String); return 0; }
+#endif
 		if ([cmd isEqual:@"get"]) { printf("%s %d\n", host.UTF8String, port); return 0; }
 
 		if ([cmd isEqual:@"set"]) { // remember a proxy for the next `on` without touching the live config
-			if (argc < 4 || !atoi(argv[3])) return 2;
-			return [@{@"host": @(argv[2]), @"port": @(atoi(argv[3]))} writeToFile:saved atomically:YES] ? 0 : 1;
+			if (argc < 4 || !validHost(@(argv[2])) || !parsePort(argv[3])) return 2;
+			return [@{@"host": @(argv[2]), @"port": @(parsePort(argv[3]))} writeToFile:saved atomically:YES] ? 0 : 1;
 		}
 
 		if (![cmd isEqual:@"on"] && ![cmd isEqual:@"off"]) return 2; // unknown command: don't fall through to off
 		BOOL on = [cmd isEqual:@"on"];
-		if (on && argc >= 4) { host = @(argv[2]); port = atoi(argv[3]); }
+		if (on && argc >= 4) {
+			if (!validHost(@(argv[2])) || !parsePort(argv[3])) { fprintf(stderr, "invalid host or port\n"); return 2; }
+			host = @(argv[2]); port = parsePort(argv[3]);
+		}
 		if (on && (!host.length || !port)) { fprintf(stderr, "no host/port set: proxyctl on HOST PORT\n"); return 1; }
 		[@{@"host": host, @"port": @(port)} writeToFile:saved atomically:YES];
 

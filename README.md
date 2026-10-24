@@ -28,14 +28,23 @@ Needs [Theos](https://theos.dev) and an iOS 16.x SDK:
 Theos's fakeroot step can fail on some Linux hosts; building as `USER=root` avoids it.
 The result is a rootless (`/var/jb`) package in `packages/`.
 
+## Security
+
+`proxyctl` is installed **setuid root**: it has to write the system network configuration,
+which the app and the tile (running as `mobile`) cannot. It only edits the proxy keys of the
+Wi-Fi (`en0`) services.
+
+- Only root and the device's `mobile` user (looked up, not assumed to be uid 501) may run it.
+- Host and port are validated, and the saved host/port file (writable by `mobile`) is type-checked.
+- It cannot tell *which* program called it. Any process running as `mobile` that can execute
+  it can redirect the phone's Wi-Fi HTTP/HTTPS traffic. Install this only on devices you
+  control. A root daemon that checks its callers over XPC would close that gap.
+- The `dump` and `services` commands exist only in debug builds (plain `make package`);
+  `FINALPACKAGE=1 make package` leaves them out.
+
 ## Notes
 
-- `proxyctl` is installed **setuid root**: it must write the system network
-  configuration, which the app and the tile (running as `mobile`) cannot. It only
-  edits the proxy keys of the Wi-Fi (`en0`) services. Treat it as part of the device's
-  trusted base and install this only on devices you control.
 - Proxy authentication is not supported.
-- `proxyctl dump` and `proxyctl services` are debug commands.
 
 ## Licence
 
