@@ -1,0 +1,6 @@
+#!/bin/sh
+chown root:wheel /var/jb/usr/bin/proxyctl
+chmod 4755 /var/jb/usr/bin/proxyctl
+uicache -p /var/jb/Applications/CrappyProxy.app 2>/dev/null
+killall -9 SpringBoard 2>/dev/null
+exit 0
