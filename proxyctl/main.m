@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 
 		// Settings treats the proxy as Manual while HTTPProxy exists, so Off must delete the keys.
 		// The last host/port live here so a bare `on` (and the app's fields) can restore them.
-		NSString *saved = @"/var/jb/var/mobile/Library/Preferences/com.a3b.crappyproxy.plist";
+		NSString *saved = @"/var/jb/var/mobile/Library/Preferences/com.atreb92.crappyproxy.plist";
 		NSDictionary *last = [NSDictionary dictionaryWithContentsOfFile:saved];
 		NSString *host = d[@"HTTPProxy"] ?: last[@"host"] ?: @"";
 		int port = d[@"HTTPPort"] ? [d[@"HTTPPort"] intValue] : [last[@"port"] intValue];

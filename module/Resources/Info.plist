@@ -4,7 +4,7 @@
 	<key>CFBundleName</key><string>Proxy</string>
 	<key>CFBundleDisplayName</key><string>Proxy</string>
 	<key>CFBundleExecutable</key><string>ProxyToggle</string>
-	<key>CFBundleIdentifier</key><string>com.a3b.proxytoggle</string>
+	<key>CFBundleIdentifier</key><string>com.atreb92.proxytoggle</string>
 	<key>CFBundleDevelopmentRegion</key><string>English</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 	<key>CFBundlePackageType</key><string>BNDL</string>
