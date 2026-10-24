@@ -1,0 +1,10 @@
+{
+  "minVersion": "0.1",
+  "class": "DepictionStackView",
+  "tintColor": "#30d158",
+  "views": [
+    {"class": "DepictionMarkdownView", "markdown": "Quick toggle for the Wi-Fi HTTP/HTTPS proxy: a **Control Centre tile** and a small app with a list of saved proxies. Handy for pointing a phone at Burp or mitmproxy.\n\nAdd the tile in Settings › Control Centre after installing.\n\nThe package installs a setuid-root helper (`proxyctl`) that only root and the `mobile` user can run. Install it only on devices you control.", "useRawFormat": true},
+    {"class": "DepictionTableTextView", "title": "Source", "text": "github.com/Atreb92/crappyproxy"},
+    {"class": "DepictionTableTextView", "title": "Requires", "text": "Rootless jailbreak, CCSupport"}
+  ]
+}

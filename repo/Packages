@@ -1,0 +1,20 @@
+Package: com.atreb92.crappyproxy
+Name: CrappyProxy
+Description: Control Center toggle for the Wi-Fi HTTP/HTTPS proxy
+Maintainer: atreb92
+Author: atreb92
+Section: Tweaks
+Depends: firmware (>= 15.0), com.opa334.ccsupport
+Conflicts: com.a3b.crappyproxy, com.a3b.proxyswitch
+Replaces: com.a3b.crappyproxy, com.a3b.proxyswitch
+Icon: https://atreb92.github.io/crappyproxy/icon.png
+SileoDepiction: https://atreb92.github.io/crappyproxy/depictions/com.atreb92.crappyproxy.json
+Homepage: https://github.com/Atreb92/crappyproxy
+Architecture: iphoneos-arm64
+Version: 0.1.0
+Installed-Size: 576
+Filename: debs/com.atreb92.crappyproxy_0.1.0_iphoneos-arm64.deb
+Size: 49492
+MD5sum: 7954b9d9152fd4951c132e9a3dcaa348
+SHA256: f8cba3eb72f00012168defa82e9def29130bf4f73c8d7d2fdd8a4bb91cefcbb5
+

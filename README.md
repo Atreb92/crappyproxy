@@ -10,6 +10,18 @@ One `.deb` contains:
 - a **companion app** with a list of saved proxies,
 - **`proxyctl`**, the helper that does the work.
 
+## Install
+
+**From Sileo (recommended):**
+
+1. In Sileo, go to Sources › **+** and add `https://atreb92.github.io/crappyproxy/`.
+2. Install **CrappyProxy**. It requires **CCSupport** (`com.opa334.ccsupport`, rootless build) for the
+   Control Centre tile.
+3. Respring, then add *Proxy* in Settings › Control Centre.
+
+**From a .deb:** install CCSupport first, then `dpkg -i` the `.deb` from the
+[latest release](https://github.com/Atreb92/crappyproxy/releases/latest) and respring.
+
 ## Usage
 
 Add a proxy in the CrappyProxy app, then use the app's switch or the Control Centre
@@ -27,6 +39,14 @@ Needs [Theos](https://theos.dev) and an iOS 16.x SDK:
 
 Theos's fakeroot step can fail on some Linux hosts; building as `USER=root` avoids it.
 The result is a rootless (`/var/jb`) package in `packages/`.
+
+### Publishing a release (maintainers)
+
+```sh
+make package FINALPACKAGE=1 && scripts/mkrepo.sh   # updates repo/ (the Sileo source)
+git add repo && git commit && git push             # a workflow deploys repo/ to GitHub Pages
+gh release create v<version> packages/com.atreb92.crappyproxy_<version>_iphoneos-arm64.deb
+```
 
 ## Security
 

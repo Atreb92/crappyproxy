@@ -9,3 +9,6 @@ Section: Tweaks
 Depends: firmware (>= 15.0), com.opa334.ccsupport
 Conflicts: com.a3b.crappyproxy, com.a3b.proxyswitch
 Replaces: com.a3b.crappyproxy, com.a3b.proxyswitch
+Icon: https://atreb92.github.io/crappyproxy/icon.png
+SileoDepiction: https://atreb92.github.io/crappyproxy/depictions/com.atreb92.crappyproxy.json
+Homepage: https://github.com/Atreb92/crappyproxy
